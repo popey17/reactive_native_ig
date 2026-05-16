@@ -8,7 +8,8 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.anonymous.my-app"
     },
     "android": {
       "adaptiveIcon": {
@@ -25,6 +26,13 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Please give permission to your library",
+          "cameraPermission": "give ur camera permission"
+        }
+      ],
       [
         "expo-splash-screen",
         {
