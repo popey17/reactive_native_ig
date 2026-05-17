@@ -34,6 +34,10 @@ export const AuthProvider = ({children}: {children:ReactNode}) => {
     if (data.user) console.log(user)
   }
 
+  const updateUser = async (userData:Partial< User >): Promise<void> => {
+    console.log()
+  }
+
   return(
     <AuthContext.Provider value={{user, signUp}}>
       {children}

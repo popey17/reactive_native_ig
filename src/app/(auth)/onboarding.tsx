@@ -1,3 +1,6 @@
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase/client';
+import { uploadProfileImage } from '@/lib/supabase/upload';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from "react";
@@ -15,12 +18,53 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function Onborading() {
 
   const [name, setName] = useState("")
-  const [useName, setUserName] = useState("")
+  const [userName, setUserName] = useState("")
   const [isLoading, setIsLoading] = useState<Boolean>(false)
   const [profileImage, setProfileImage] = useState< string | null >(null)
+  const {user} = useAuth();
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    setIsLoading(true)
+    if(!name || !userName) {
+      Alert.alert("need username and name");
+      setIsLoading(false);
+      return;
+    }
 
+    try {
+
+      if(!user) {("user not authenticated")
+        setIsLoading(false);
+        throw new Error
+      }
+
+      const {data:existingUser, error} = await supabase.from("profiles").select("id").eq("username", userName).neq("id", user.id).single();
+
+      if (error) {
+        setIsLoading(false);
+        throw error;
+      }
+
+      if (existingUser) {
+        Alert.alert (
+          "username already taken"
+        )
+        setIsLoading(false)
+      }
+
+      let profileImgUrl: string | undefined
+      if(profileImage) {
+        try {
+          profileImgUrl =  await uploadProfileImage( user.id , profileImage)
+        } catch (error) {
+          console.error(error);
+          Alert.alert("Fail to Upload Profile")
+        }
+      }
+      
+    } catch (error) {
+      Alert.alert("error")
+    }
   }
 
   const pickImage = async () => {
@@ -49,20 +93,21 @@ export default function Onborading() {
   const takePhoto = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
 
-  if (!permission.granted) {
-    Alert.alert("Permission denied", "Camera access is required");
-    return;
-  }
+    if (!permission.granted) {
+      Alert.alert("Permission denied", "Camera access is required");
+      return;
+    }
 
-  let result = await ImagePicker.launchCameraAsync({
-    mediaTypes: ["images"],
-    allowsEditing: true,
-    quality: 0.8,
-  });
+    let result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1,1],
+      quality: 0.8,
+    });
 
-  if (!result.canceled) {
-    console.log(result.assets[0].uri);
-  }
+    if (!result.canceled) {
+      console.log(result.assets[0].uri);
+    }
   }
 
   const showImgPicker = () => {
@@ -97,7 +142,6 @@ export default function Onborading() {
           </TouchableOpacity>
           <TextInput
             placeholder="Name"
-            secureTextEntry
             autoCapitalize="words"
             value={name}
             onChangeText={setName}
@@ -105,9 +149,8 @@ export default function Onborading() {
           />
           <TextInput
             placeholder="Username"
-            secureTextEntry
             autoCapitalize="words"
-            value={useName}
+            value={userName}
             onChangeText={setUserName}
             style={styles.input}
           />
